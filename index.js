@@ -49,26 +49,27 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // POST /api/users - Create a new user
-app.post('/api/users', (req, res) => {
-  const { username } = req.body;
-  
-  const newUser = new User({ username });
-  newUser.save((err, savedUser) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({
-      username: savedUser.username,
-      _id: savedUser._id
-    });
-  });
+app.post('/api/users', async (req, res) => {
+  try {
+    const user = new User({ username: req.body.username });
+    const savedUser = await user.save();  // Use async/await here
+    res.json({ username: savedUser.username, _id: savedUser._id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
+
 // GET /api/users - Get a list of all users
-app.get('/api/users', (req, res) => {
-  User.find({}, (err, users) => {
-    if (err) return res.status(500).json({ error: err.message });
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find({}); // Use await to handle the promise
     res.json(users.map(user => ({ username: user.username, _id: user._id })));
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message }); // Handle any errors
+  }
 });
+
 
 // POST /api/users/:_id/exercises - Add an exercise
 app.post('/api/users/:_id/exercises', (req, res) => {
